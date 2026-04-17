@@ -86,7 +86,7 @@ lat_par = torch.tensor([6.3026, 6.3026, 6.3026, 90., 90., 90.], dtype=torch.floa
 mi = get_mi(min_index=-6, max_index=6)  # Miller indices
 
 cr = Crystal(lat_par)
-el = GIWAXS(cr, params)
+el = GIWAXS(cr, params, mi)
 q_2d, q_mask = el.giwaxs_sim()
 ```
 
