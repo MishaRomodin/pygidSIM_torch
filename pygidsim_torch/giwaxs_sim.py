@@ -92,7 +92,7 @@ class GIWAXS:
 
     def giwaxs_sim(self,
                    orientation: Union[torch.Tensor, str, None] = torch.tensor([0, 0, 1]),
-                   move_fromMW: bool = True, ):
+                   move_fromMW: bool = False, ):
         """
         Calculates peak positions and TODO: their intensities in the GIWAXS pattern.
 
