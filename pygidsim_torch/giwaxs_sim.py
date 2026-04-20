@@ -126,7 +126,8 @@ class GIWAXS:
             return q_2d, mask
 
     @staticmethod
-    def giwaxs_1d(q_2d: torch.Tensor, ):
+    def giwaxs_1d(q_1d: torch.Tensor, ):
+        """Calculate powder diffraction pattern for GIWAXS."""
         # TODO
         raise NotImplementedError("Powder diffraction is not implemented yet.")
 

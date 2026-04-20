@@ -100,7 +100,7 @@ class Q_pos:
                 orientation = orientation.unsqueeze(0).expand(self._B, -1)
             assert orientation.shape[1] == 3, \
                 "orientation must have shape (B, 3) or (3,) in case of same orientation for all samples."
-            orientation = torch.nn.functional.normalize(orientation, dim=1)
+            orientation = torch.nn.functional.normalize(orientation.to(torch.float32), dim=1)
 
         assert orientation.shape == (self._B, 3), "finally, the orientation must have shape (B, 3)."
 
