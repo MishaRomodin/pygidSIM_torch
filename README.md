@@ -3,14 +3,8 @@
 _pygidSIM_torch_ calculates GIWAXS patterns from crystal structure descriptions. It is a
 PyTorch-based implementation of the pygidSIM package.
 
-[//]: # (<p align="center">)
-
-[//]: # (  <img src="https://raw.githubusercontent.com/mlgid-project/pygidSIM/main/docs/images/mlgid_logo_pygidsim.png" width="400" alt="GIDSIM">)
-
-[//]: # (</p>)
-
 <p align="center">
-  <img src="./docs/images/mlgid_logo_pygidsim_torch.png" width="400" alt="GIDSIM">
+  <img src="https://raw.githubusercontent.com/MishaRomodin/pygidSIM_torch/main/docs/images/mlgid_logo_pygidsim_torch.png" width="400" alt="pygidSIM_torch">
 </p>
 
 ## Installation
