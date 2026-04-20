@@ -2,7 +2,6 @@
 Tests for Crystal-based GIWAXS simulations.
 """
 import pytest
-import numpy as np
 from pygidsim_torch.giwaxs_sim import GIWAXS
 
 
