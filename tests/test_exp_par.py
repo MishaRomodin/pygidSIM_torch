@@ -101,10 +101,10 @@ class TestExpPar:
         assert torch.all(exp_par.q_z_range[0] == torch.tensor([0.0, 3.0]))
 
     def test_batch_size_mismatch_error(self):
-        """Test that mismatched batch sizes raise AssertionError."""
+        """Test that mismatched batch sizes raise ValueError."""
         q_xy_max = torch.tensor([5.0, 6.0])  # batch size 2
         q_z_max = torch.tensor([3.0])  # batch size 1
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             ExpParameters(q_xy_max=q_xy_max, q_z_max=q_z_max)
 
     def test_invalid_q_xy_max_type(self):
@@ -128,17 +128,17 @@ class TestExpPar:
             ExpParameters(q_xy_max=torch.tensor([5.0]))
 
     def test_invalid_range_order(self):
-        """Test that ranges where min >= max raise AssertionError."""
+        """Test that ranges where min >= max raise ValueError."""
         # min > max
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             ExpParameters(
                 q_xy_range=torch.tensor([5.0, 3.0]),
                 q_z_range=torch.tensor([0.5, 4.0])
             )
 
     def test_invalid_range_order_batch(self):
-        """Test that invalid range order is caught in batch mode."""
-        with pytest.raises(AssertionError):
+        """Test that invalid range order is caught in batch mode with ValueError."""
+        with pytest.raises(ValueError):
             ExpParameters(
                 q_xy_range=torch.tensor([[1.0, 5.0], [6.0, 2.0]]),  # second batch invalid
                 q_z_range=torch.tensor([[0.5, 3.0], [1.0, 4.0]])
@@ -174,8 +174,8 @@ class TestExpPar:
         assert torch.allclose(exp_par.q_z_range[:, 1], q_z_max)
 
     def test_batch_size_mismatch_q_xy_range_q_z_range(self):
-        """Test that mismatched batch sizes between ranges raise AssertionError."""
+        """Test that mismatched batch sizes between ranges raise ValueError."""
         q_xy_range = torch.tensor([[1.0, 5.0], [2.0, 6.0]])  # batch size 2
         q_z_range = torch.tensor([[0.5, 3.0]])  # batch size 1
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             ExpParameters(q_xy_range=q_xy_range, q_z_range=q_z_range)
