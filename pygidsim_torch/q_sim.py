@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from math import pi
 from typing import Union, Optional
 
@@ -86,22 +87,21 @@ class Q_pos:
             return q_3d
         elif isinstance(orientation, str):
             if orientation != 'random':
-                raise ValueError("orientation is not correct - use ArrayLike with size (3,) or 'random'")
-            directions = get_unique_directions(-10, 10, device=self.device, dtype=self.dtype, )
+                raise ValueError("orientation is not correct - use Tensor with size (3,) or 'random'")
+            directions = get_unique_directions(-10, 10, device=self.device)
             perm_idx = torch.multinomial(
                 torch.ones(directions.shape[0]),
                 q_3d.shape[0],
                 replacement=True
             )
-
             orientation = directions[perm_idx]  # choose possible orientations for the samples
         else:
             if orientation.ndim == 1:
                 orientation = orientation.unsqueeze(0).expand(self._B, -1)
             assert orientation.shape[1] == 3, \
                 "orientation must have shape (B, 3) or (3,) in case of same orientation for all samples."
-            orientation = torch.nn.functional.normalize(orientation.to(torch.float32), dim=1)
 
+        orientation = F.normalize(orientation, dim=-1)
         assert orientation.shape == (self._B, 3), "finally, the orientation must have shape (B, 3)."
 
         R = self._rotation_matrix(orientation=orientation.to(self.device))
@@ -199,14 +199,28 @@ class Q_pos:
 
         return R
 
-    def _filter_orientations(self, orient: torch.Tensor):
-        """Filter orientations to only valid entries if full batch is provided."""
+    def _filter_orientations(self, orient: torch.Tensor) -> torch.Tensor:
+        """
+        Filter orientations to only valid entries if full batch is provided.
+
+        Parameters
+        ----------
+        orient : torch.Tensor
+            Orientation tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
+            If None, default orientation [001] is used.
+
+        Returns
+        -------
+        torch.Tensor
+            Filtered orientation tensor of shape (valid_B, 3), where valid_B is the number of valid
+             lattice parameter sets. Invalid entries are ignored.
+        """
         if orient is None:
             orient = torch.tensor([0., 0., 1.], dtype=self.dtype, device=self.device)
         if orient.ndim == 1:
             orient = orient.unsqueeze(0).expand(self._B, -1)
         assert orient.shape[0] == self._B, "Orientation tensor must have the same batch size as the lattice parameters."
-        orient = torch.nn.functional.normalize(orient, dim=1)
+        orient = F.normalize(orient, dim=-1)
         return orient[self.valid]
 
     @property
@@ -289,7 +303,3 @@ class Q_pos:
 
         unit_volume = torch.sum(a1 * b1, dim=-1, keepdim=True)
         return torch.stack([b1, b2, b3], dim=1) * 2 * pi / unit_volume.unsqueeze(-1)
-
-# if __name__ == "__main__":
-#     lattice_params =
-#     q_pos = Q_pos(self.crystal.lattice_params)
