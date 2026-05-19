@@ -1,5 +1,7 @@
 import torch
 from math import pi
+from typing import Union
+import warnings
 
 
 def convert_angles_to_degrees(
@@ -88,3 +90,14 @@ def calculate_unit_volume(lat_par: torch.Tensor,  # (B, 6)
         - torch.cos(beta) ** 2
         - torch.cos(gamma) ** 2,
     )
+
+
+def define_device(device: Union[str, torch.device] = None) -> torch.device:
+    if device is None:
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    elif isinstance(device, str):
+        device = torch.device(device)
+    if device.type == 'cuda' and not torch.cuda.is_available():
+        warnings.warn('Warning: There\'s no GPU available on this machine. Switching to CPU.')
+        device = torch.device('cpu')
+    return device

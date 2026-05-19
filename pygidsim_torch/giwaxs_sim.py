@@ -2,6 +2,7 @@ import torch
 from typing import Optional, Union, Tuple
 from pygidsim_torch.experiment import ExpParameters
 from pygidsim_torch.q_sim import Q_pos
+from pygidsim_torch.utils import define_device
 
 
 class Crystal:
@@ -12,8 +13,8 @@ class Crystal:
     ----------
     lattice_params : torch.Tensor
         Lattice parameters of shape (B, 6). Columns: a, b, c, alpha, beta, gamma.
-    device : torch.device
-        Device on which the tensor is stored.
+    device : Optional[torch.device]
+        Device on which the tensor is stored. If None, use CUDA if available, otherwise CPU.
     """
 
     def __init__(self,
@@ -23,12 +24,13 @@ class Crystal:
                  # atom_positions: Optional[torch.Tensor] = None,
                  # occ: Optional[torch.Tensor] = None,
                  # scale: Optional[torch.Tensor] = None, # (B, 3)
-                 device: torch.device = None
+                 device: Optional[torch.device] = None
                  ):
-        self.device = device
-        if self.device is None:
-            self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.lattice_params = lattice_params.to(self.device)
+        self.device = define_device(device)
+        self.lattice_params = lattice_params.to(
+            device=self.device,
+            dtype=torch.float32
+        )
         if self.lattice_params.ndim == 1:
             self.lattice_params = self.lattice_params.unsqueeze(0)
         # self.spgr = spgr.to(device)
@@ -76,8 +78,12 @@ class GIWAXS:
                    0] == self.B, "q_xy_range must have the same batch size as the crystal lattice parameters."
 
         self._q_sim = Q_pos(self.crystal.lattice_params)
+        self.valid = self._q_sim.valid
         if mi is not None:
-            self._mi = mi.to(self.crystal.lattice_params.device)
+            self._mi = mi.to(
+                device=self.crystal.lattice_params.device,
+                dtype=torch.float32
+            )
         else:
             # TODO: calculate allowed miller indices
             raise NotImplementedError(
@@ -111,6 +117,8 @@ class GIWAXS:
         -------
         q : torch.Tensor
             Peak positions. Tensor of shape (B, peaks_num, 2).
+        mask : torch.Tensor
+            Mask for peaks in the visible area. Tensor of shape (B, peaks_num).
         """
         if orientation is None:
             q_1d, mask = self.giwaxs_1d(self.q_3d)
@@ -122,7 +130,7 @@ class GIWAXS:
                 q_xy_range=self.exp.q_xy_range,
                 q_z_range=self.exp.q_z_range,
                 move_fromMW=move_fromMW
-            )  # (B, peaks_num, 2)
+            )
             return q_2d, mask
 
     @staticmethod
