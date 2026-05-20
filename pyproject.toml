@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pygidsim_torch"
-version = "0.1.2"
+version = "0.1.3dev"
 description = "PyTorch-based implementation of pygidSIM package for calculating GIWAXS patterns"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -51,7 +51,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pygidsim_torch*", "tests*"]
+include = ["pygidsim_torch*"]
 
 [tool.setuptools.package-data]
 pygidsim_torch = ["py.typed"]
