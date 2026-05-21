@@ -20,10 +20,10 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_cif.py
+pytest tests/test_crystal.py
 
 # Run specific test
-pytest tests/test_crystal.py::TestCrystalGIWAXS::test_crystal_giwaxs_single
+pytest tests/test_crystal.py::TestCrystalGIWAXS::test_crystal_giwaxs_single_random_or
 ```
 
 ### Test Coverage
@@ -46,19 +46,6 @@ open htmlcov/index.html
 pytest -n auto
 ```
 
-### Test Categories
-
-```bash
-# Run only unit tests
-pytest -m "unit"
-
-# Run only integration tests
-pytest -m "integration"
-
-# Skip slow tests
-pytest -m "not slow"
-```
-
 ## Development Workflow
 
 1. **Install development dependencies:**
@@ -71,13 +58,13 @@ pytest -m "not slow"
    make test
    ```
 
-3. **Check code quality:**
+3. **Run tests in parallel:**
    ```bash
-   make lint
-   make format-check
+   make test-fast
    ```
 
-4. **Format code:**
+4. **Run tests with coverage:**
    ```bash
-   make format
+   make test-cov
    ```
+
