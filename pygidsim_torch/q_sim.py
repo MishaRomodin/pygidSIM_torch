@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 from math import pi
 from typing import Union, Optional
 
@@ -13,9 +14,9 @@ class Q_pos:
 
     Attributes
     ----------
-    lat_par : torch.Tensor
+    lat_par : Tensor
         Lattice parameters. Shape (B, 6). Angles in grad.
-    _rec : torch.Tensor
+    _rec : Tensor
         Reciprocal vectors. Shape (B, 3, 3).
 
     Methods
@@ -26,7 +27,7 @@ class Q_pos:
         Rotate the crystal.
     """
 
-    def __init__(self, lat_par: torch.Tensor):
+    def __init__(self, lat_par: Tensor):
         self.lat_par = lat_par
         self._B = len(lat_par)
         self.device = lat_par.device
@@ -36,45 +37,45 @@ class Q_pos:
         self.valid = self.volume > 0
         self._rec = self._calculate_rec()
 
-    def calculate_q3d(self, mi: torch.Tensor):
+    def calculate_q3d(self, mi: Tensor):
         """
         Calculate scattering vectors.
 
         Parameters
         ----------
-        mi : torch.Tensor
+        mi : Tensor
             The Miller indices. Shape (num_reflections, 3).
 
         Returns
         -------
-        torch.Tensor
+        Tensor
             The scattering vectors. Shape (B, num_reflections, 3).
         """
         # if len(mi) == 0:
-        #     return torch.tensor([], dtype=self.dtype).reshape(self._B, 0, 3)
+        #     return Tensor([], dtype=self.dtype).reshape(self._B, 0, 3)
         return torch.matmul(mi, self._rec)
 
     def rotate_vect(self,
-                    q_3d: torch.Tensor,
-                    orientation: Optional[Union[torch.Tensor, str]] = None, ):
+                    q_3d: Tensor,
+                    orientation: Optional[Union[Tensor, str]] = None, ):
         """
         Rotate crystal
 
         Parameters
         ----------
-        q_3d : torch.Tensor
+        q_3d : Tensor
             Peak positions in 3d reciprocal space.
             Tensor of shape (B, num_reflections, 3).
-        orientation : Union[torch.Tensor, str]
+        orientation : Union[Tensor, str]
             Orientation of the crystal growth:
-            - torch.Tensor: Specific orientation vector. Tensor of shape (B, 3) or (3,) in case of same orientation
+            - Tensor: Specific orientation vector. Tensor of shape (B, 3) or (3,) in case of same orientation
             for all samples.
             - 'random': Random orientation for each calculation (2D pattern).
             Default is [001] for all samples.
 
         Returns
         -------
-        q_3d : torch.Tensor
+        q_3d : Tensor
             Rotated peak positions in 3d reciprocal space.
             Tensor of shape (B, num_reflections, 3).
         """
@@ -109,27 +110,27 @@ class Q_pos:
 
     def _rotation_matrix(
             self,
-            orientation: torch.Tensor = None,
+            orientation: Tensor = None,
             *,
-            baz: torch.Tensor = None,
+            baz: Tensor = None,
     ):
         """
         Rotate crystal
 
         Parameters
         ----------
-        orientation : torch.Tensor, optional
+        orientation : Tensor, optional
             Crystallographic orientations.orientation of the crystal growth.
             Tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
             Default is [001] for all samples.
-        baz : torch.Tensor, optional
+        baz : Tensor, optional
             Shape (3,) or (B, 3). Basis vector for the default orientation.
             Tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
             Default is [001] for all samples.
 
         Return
         -------
-        R : torch.Tensor
+        R : Tensor
             Rotation matrix. Shape (B, 3, 3).
         """
         # B = self.valid.sum().item()
@@ -216,7 +217,7 @@ class Q_pos:
              lattice parameter sets. Invalid entries are ignored.
         """
         if orient is None:
-            orient = torch.tensor([0., 0., 1.], dtype=self.dtype, device=self.device)
+            orient = Tensor([0., 0., 1.], dtype=self.dtype, device=self.device)
         if orient.ndim == 1:
             orient = orient.unsqueeze(0).expand(self._B, -1)
         assert orient.shape[0] == self._B, "Orientation tensor must have the same batch size as the lattice parameters."
@@ -224,11 +225,11 @@ class Q_pos:
         return orient[self.valid]
 
     @property
-    def rec(self) -> torch.Tensor:
+    def rec(self) -> Tensor:
         """Return reciprocal lattice vectors."""
         return self._rec
 
-    def _calculate_rec(self) -> torch.Tensor:
+    def _calculate_rec(self) -> Tensor:
         """Calculate reciprocal lattice vectors."""
         a1, a2, a3 = self._lattice_vectors_from_parameters()
         return self._calc_reciprocal_vectors(a1, a2, a3)
@@ -280,9 +281,9 @@ class Q_pos:
 
     @staticmethod
     def _calc_reciprocal_vectors(
-            a1: torch.Tensor,  # (B, 3)
-            a2: torch.Tensor,  # (B, 3)
-            a3: torch.Tensor,  # (B, 3)
+            a1: Tensor,  # (B, 3)
+            a2: Tensor,  # (B, 3)
+            a3: Tensor,  # (B, 3)
     ):
         """
         Calculate the reciprocal unit cell vectors from the real-space unit cell vectors.
