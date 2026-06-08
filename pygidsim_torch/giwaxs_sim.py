@@ -187,7 +187,7 @@ class GIWAXS:
         return q_2d, q_mask
 
     @staticmethod
-    def q3d_q2d(q_3d: torch.Tensor) -> torch.Tensor:
+    def q3d_q2d(q_3d: Tensor) -> Tensor:
         """
         Convert q_3d to q_2d
 
