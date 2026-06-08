@@ -217,7 +217,7 @@ class Q_pos:
              lattice parameter sets. Invalid entries are ignored.
         """
         if orient is None:
-            orient = Tensor([0., 0., 1.], dtype=self.dtype, device=self.device)
+            orient = torch.tensor([0., 0., 1.], dtype=self.dtype, device=self.device)
         if orient.ndim == 1:
             orient = orient.unsqueeze(0).expand(self._B, -1)
         assert orient.shape[0] == self._B, "Orientation tensor must have the same batch size as the lattice parameters."
