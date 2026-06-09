@@ -52,7 +52,7 @@ class Q_pos:
             The scattering vectors. Shape (B, num_reflections, 3).
         """
         # if len(mi) == 0:
-        #     return Tensor([], dtype=self.dtype).reshape(self._B, 0, 3)
+        #     return torch.tensor([], dtype=self.dtype).reshape(self._B, 0, 3)
         return torch.matmul(mi, self._rec)
 
     def rotate_vect(self,
