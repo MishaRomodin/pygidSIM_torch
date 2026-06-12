@@ -1,3 +1,7 @@
+import torch
+from torch import Tensor
+
+
 class Intensity:
     """
     A class to calculate the GIWAXS intensities
