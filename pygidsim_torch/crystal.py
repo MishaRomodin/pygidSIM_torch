@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional
 import torch
 from torch import Tensor
@@ -40,6 +41,8 @@ class Crystal:
         # self.spgr = spgr.to(device)
         self._volumes_all = self._calc_volume(vol_min=vol_min)
         self._valid = self._volumes_all > 0
+        if not self._valid.all():
+            warnings.warn('Warning: Some of the lattice parameters are not valid.')
 
     @property
     def lat_par(self) -> Tensor:
