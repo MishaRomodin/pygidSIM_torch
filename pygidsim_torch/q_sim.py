@@ -34,6 +34,11 @@ class Qpos:
 
         self._rec = self._calculate_rec()
 
+    @property
+    def rec(self) -> Tensor:
+        """Return reciprocal lattice vectors."""
+        return self._rec
+
     def calculate_q3d(self, mi: Tensor):
         """
         Calculate scattering vectors.
@@ -208,11 +213,6 @@ class Qpos:
         assert orient.shape[0] == self._B, "Orientation tensor must have the same batch size as the lattice parameters."
         orient = F.normalize(orient, dim=-1)
         return orient
-
-    @property
-    def rec(self) -> Tensor:
-        """Return reciprocal lattice vectors."""
-        return self._rec
 
     def _calculate_rec(self) -> Tensor:
         """Calculate reciprocal lattice vectors."""
