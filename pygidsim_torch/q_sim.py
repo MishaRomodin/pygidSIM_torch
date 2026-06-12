@@ -1,11 +1,10 @@
 import torch
-import torch.nn.functional as F
 from torch import Tensor
+import torch.nn.functional as F
 from math import pi
 from typing import Union, Optional
 
-from pygidsim_torch.utils import calculate_volume
-from pygidsim_torch.directions import get_unique_directions
+from .directions import get_unique_directions
 
 
 class Q_pos:
@@ -33,8 +32,6 @@ class Q_pos:
         self.device = lat_par.device
         self.dtype = lat_par.dtype
 
-        self.volume = self._calc_volume(vol_min=10)
-        self.valid = self.volume > 0
         self._rec = self._calculate_rec()
 
     def calculate_q3d(self, mi: Tensor):
@@ -350,17 +347,7 @@ class Q_pos:
 
         a3 = torch.stack([a31, a32, a33], dim=-1)
 
-        a1[~self.valid] = float('nan')
-        a2[~self.valid] = float('nan')
-        a3[~self.valid] = float('nan')
-
         return a1, a2, a3
-
-    def _calc_volume(self, vol_min=10):
-        """Calculate the volume of the unit cell."""
-        unit_volume = calculate_volume(self.lat_par, deg=True)
-        unit_volume[unit_volume < vol_min] = 0
-        return unit_volume
 
     @staticmethod
     def _calc_reciprocal_vectors(
