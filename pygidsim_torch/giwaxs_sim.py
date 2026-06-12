@@ -39,7 +39,7 @@ class GIWAXS:
                  exp: ExpParameters,
                  mi: Optional[Tensor] = None, ):
         self.crystal = crystal
-        self.B = self.crystal.lattice_params.shape[0]
+        self.B = self.crystal.lat_par.shape[0]
 
         self.exp = exp
         if self.exp.q_xy_range.shape[0] == 1:
@@ -50,7 +50,7 @@ class GIWAXS:
 
         if mi is not None:
             self._mi = mi.to(
-                device=self.crystal.lattice_params.device,
+                device=self.crystal.lat_par.device,
                 dtype=torch.float32
             )
         else:
