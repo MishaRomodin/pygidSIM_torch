@@ -201,20 +201,20 @@ class Q_pos:
         return R
 
     def _filter_orientations(self, orient: torch.Tensor) -> torch.Tensor:
+    def _filter_orientations(self, orient: Tensor) -> Tensor:
         """
-        Filter orientations to only valid entries if full batch is provided.
+        Normalize orientations.
 
         Parameters
         ----------
-        orient : torch.Tensor
+        orient : Tensor
             Orientation tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
             If None, default orientation [001] is used.
 
         Returns
         -------
-        torch.Tensor
-            Filtered orientation tensor of shape (valid_B, 3), where valid_B is the number of valid
-             lattice parameter sets. Invalid entries are ignored.
+        Tensor
+            Normalized orientation tensor of shape (B, 3).
         """
         if orient is None:
             orient = torch.tensor([0., 0., 1.], dtype=self.dtype, device=self.device)
@@ -222,7 +222,7 @@ class Q_pos:
             orient = orient.unsqueeze(0).expand(self._B, -1)
         assert orient.shape[0] == self._B, "Orientation tensor must have the same batch size as the lattice parameters."
         orient = F.normalize(orient, dim=-1)
-        return orient[self.valid]
+        return orient
 
     @property
     def rec(self) -> Tensor:
