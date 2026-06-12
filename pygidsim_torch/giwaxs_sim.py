@@ -1,40 +1,10 @@
 import torch
 from torch import Tensor
 from typing import Optional, Union, Tuple
-from pygidsim_torch.experiment import ExpParameters
-from pygidsim_torch.q_sim import Q_pos
-from pygidsim_torch.utils import define_device
 
-
-class Crystal:
-    """
-    A class to represent the crystal structure.
-
-    Parameters
-    ----------
-    lattice_params : Tensor
-        Lattice parameters of shape (B, 6). Columns: a, b, c, alpha, beta, gamma.
-    device : Optional[torch.device]
-        Device on which the tensor is stored. If None, use CUDA if available, otherwise CPU.
-    """
-
-    def __init__(self,
-                 lattice_params: Tensor,
-                 # spgr: Tensor[int],
-                 # atoms: Optional[Tensor] = None,
-                 # atom_positions: Optional[Tensor] = None,
-                 # occ: Optional[Tensor] = None,
-                 # scale: Optional[Tensor] = None, # (B, 3)
-                 device: Optional[torch.device] = None
-                 ):
-        self.device = define_device(device)
-        self.lattice_params = lattice_params.to(
-            device=self.device,
-            dtype=torch.float32
-        )
-        if self.lattice_params.ndim == 1:
-            self.lattice_params = self.lattice_params.unsqueeze(0)
-        # self.spgr = spgr.to(device)
+from .crystal import Crystal
+from .experiment import ExpParameters
+from .q_sim import Qpos
 
 
 class GIWAXS:
