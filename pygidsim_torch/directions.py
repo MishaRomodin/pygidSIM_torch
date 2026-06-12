@@ -1,6 +1,8 @@
-import torch
 from typing import Optional
-from pygidsim_torch.utils import define_device
+import torch
+from torch import Tensor
+
+from .utils import define_device
 
 
 def get_unique_directions(
@@ -9,7 +11,7 @@ def get_unique_directions(
         *,
         device: Optional[torch.device] = None,
         dtype: torch.dtype = torch.float32,
-) -> torch.Tensor:
+) -> Tensor:
     """
     Generate unique orientations within the given range.
 
@@ -33,7 +35,7 @@ def get_unique_directions(
 
     Returns
     -------
-    torch.Tensor
+    Tensor
         The orientations of shape (num_orientations, 3).
     """
     device = define_device(device)
@@ -55,7 +57,7 @@ def get_mi(
         *,
         device: Optional[torch.device] = None,
         dtype: torch.dtype = torch.int64,
-) -> torch.Tensor:
+) -> Tensor:
     """
     Generate all the Laue indices within the given range excluding (0, 0, 0).
     No symmetry reduction is applied.
@@ -71,7 +73,7 @@ def get_mi(
 
     Returns
     -------
-    torch.Tensor
+    Tensor
         The Laue indices of shape (num_reflections, 3).
     """
     device = define_device(device)
@@ -85,7 +87,7 @@ def get_mi(
     return hkl.to(dtype)
 
 
-def _reduce_directions(hkl: torch.Tensor) -> torch.Tensor:
+def _reduce_directions(hkl: Tensor) -> Tensor:
     """
     Remove:
     - collinear multiples

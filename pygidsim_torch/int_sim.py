@@ -1,3 +1,7 @@
+import torch
+from torch import Tensor
+
+
 class Intensity:
     """
     A class to calculate the GIWAXS intensities
@@ -8,11 +12,11 @@ class Intensity:
         List of elements in the structure.
     atom_positions :
         Relative atom coordinates (related with the atoms attribute).
-    occ : torch.Tensor
+    occ : Tensor
         Atom occupancies (related with the atoms attribute).
-    q_3d : torch.Tensor
+    q_3d : Tensor
         Peak vectors in 3d reciprocal space.
-    mi :  torch.Tensor
+    mi :  Tensor
         Miller indices.
     wavelength :
         Beam wavelength, Å.

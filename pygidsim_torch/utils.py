@@ -1,11 +1,12 @@
-import torch
-from math import pi
-from typing import Union
 import warnings
+from typing import Union
+from math import pi
+import torch
+from torch import Tensor
 
 
 def convert_angles_to_degrees(
-        lattice_params: torch.Tensor,
+        lattice_params: Tensor,
         inplace: bool = False,
 ):
     """
@@ -13,14 +14,14 @@ def convert_angles_to_degrees(
 
     Parameters
     ----------
-    lattice_params : torch.Tensor
+    lattice_params : Tensor
         The lattice parameters. Shape (B, 6). Angles in radians.
     inplace : bool
         If True, convert the angles in-place. Defaults to False.
 
     Returns
     -------
-    lattice_params : torch.Tensor
+    lattice_params : Tensor
         The lattice parameters. Shape (B, 6). Angles in degrees.
     """
     if not inplace:
@@ -30,7 +31,7 @@ def convert_angles_to_degrees(
 
 
 def convert_angles_to_radians(
-        lattice_params: torch.Tensor,
+        lattice_params: Tensor,
         inplace: bool = False,
 ):
     """
@@ -38,14 +39,14 @@ def convert_angles_to_radians(
 
     Parameters
     ----------
-    lattice_params : torch.Tensor
+    lattice_params : Tensor
         The lattice parameters. A tensor of shape (B, 6). Angles in degrees.
     inplace : bool
         If True, convert the angles in-place. Defaults to False.
 
     Returns
     -------
-    lattice_params : torch.Tensor
+    lattice_params : Tensor
         The lattice parameters. Shape (B, 6). Angles in radians.
     """
     if not inplace:
@@ -55,10 +56,10 @@ def convert_angles_to_radians(
 
 
 def calculate_volume(
-        lat_par: torch.Tensor,  # (B, 6)
+        lat_par: Tensor,  # (B, 6)
         min_unit_volume: float = 0.1,
         deg: bool = True,
-) -> torch.Tensor:
+) -> Tensor:
     """Calculate the volume of a unit cell."""
     if deg:
         lat_par = convert_angles_to_radians(lat_par, inplace=False)
@@ -72,14 +73,14 @@ def calculate_volume(
     return a * b * c * unit_volume
 
 
-def calculate_unit_volume(lat_par: torch.Tensor,  # (B, 6)
+def calculate_unit_volume(lat_par: Tensor,  # (B, 6)
                           ):
     """
     Calculate unit volume of a unit cell.
 
     Parameters
     ----------
-    lat_par : torch.Tensor
+    lat_par : Tensor
         The lattice parameters. Shape (B, 6). Angles in radians.
     """
     a, b, c, alpha, beta, gamma = lat_par.unbind(dim=-1)
@@ -92,7 +93,7 @@ def calculate_unit_volume(lat_par: torch.Tensor,  # (B, 6)
     )
 
 
-def define_device(device: Union[str, torch.device] = None) -> torch.device:
+def define_device(device: Union[str, torch.device, None] = None) -> torch.device:
     if device is None:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     elif isinstance(device, str):

@@ -1,5 +1,6 @@
 from typing import Optional
 import torch
+from torch import Tensor
 
 
 class ExpParameters:
@@ -8,14 +9,14 @@ class ExpParameters:
 
     Attributes
     ----------
-    q_xy_range : torch.Tensor, optional
+    q_xy_range : Tensor, optional
         Range for the q in xy direction, Å^{-1}. Tensor of shape (B, 2) or (2,)
-    q_z_range : torch.Tensor, optional
+    q_z_range : Tensor, optional
         Range for the q in z direction, Å^{-1}. Tensor of shape (B, 2) or (2,)
-    q_xy_max : torch.Tensor, optional
+    q_xy_max : Tensor, optional
         Upper limit for q in xy direction, Å^{-1}. Tensor of shape (B,) or (1,).
         Used if 'q_xy_range' is not provided.
-    q_z_max : torch.Tensor, optional
+    q_z_max : Tensor, optional
         Upper limit for q in z direction, Å^{-1}. Tensor of shape (B,) or (1,).
         Used if 'q_z_range' is not provided.
     wavelength : float
@@ -23,20 +24,20 @@ class ExpParameters:
     """
 
     def __init__(self,
-                 q_xy_range: Optional[torch.Tensor] = None,  # (B, 2) or (2,)
-                 q_z_range: Optional[torch.Tensor] = None,  # (B, 2) or (2,)
-                 q_xy_max: Optional[torch.Tensor] = None,  # (B,) or (1,)
-                 q_z_max: Optional[torch.Tensor] = None,  # (B,) or (1,)
+                 q_xy_range: Optional[Tensor] = None,  # (B, 2) or (2,)
+                 q_z_range: Optional[Tensor] = None,  # (B, 2) or (2,)
+                 q_xy_max: Optional[Tensor] = None,  # (B,) or (1,)
+                 q_z_max: Optional[Tensor] = None,  # (B,) or (1,)
                  # ai: float = 0.3,  # Incidence angle, deg
                  en: float = 18000,  # Energy, eV
                  # create_FF: bool = True,  # If True create database with form-factors.
                  ):
-        def _ensure_tensor(name: str, value: torch.Tensor) -> torch.Tensor:
-            if not isinstance(value, torch.Tensor):
-                raise TypeError(f'{name} must be a torch.Tensor.')
+        def _ensure_tensor(name: str, value: Tensor) -> Tensor:
+            if not isinstance(value, Tensor):
+                raise TypeError(f'{name} must be a Tensor.')
             return value
 
-        def _normalize_max(name: str, value: torch.Tensor) -> torch.Tensor:
+        def _normalize_max(name: str, value: Tensor) -> Tensor:
             value = _ensure_tensor(name, value)
             if value.ndim == 0:
                 value = value.unsqueeze(0)
@@ -44,7 +45,7 @@ class ExpParameters:
                 raise ValueError(f'{name} must have shape (B,) or (1,). Got {tuple(value.shape)}.')
             return value
 
-        def _normalize_range(name: str, value: torch.Tensor) -> torch.Tensor:
+        def _normalize_range(name: str, value: Tensor) -> Tensor:
             value = _ensure_tensor(name, value)
             if value.ndim == 1:
                 if value.shape[0] != 2:

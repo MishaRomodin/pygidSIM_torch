@@ -1,39 +1,10 @@
-import torch
 from typing import Optional, Union, Tuple
-from pygidsim_torch.experiment import ExpParameters
-from pygidsim_torch.q_sim import Q_pos
-from pygidsim_torch.utils import define_device
+import torch
+from torch import Tensor
 
-
-class Crystal:
-    """
-    A class to represent the crystal structure.
-
-    Parameters
-    ----------
-    lattice_params : torch.Tensor
-        Lattice parameters of shape (B, 6). Columns: a, b, c, alpha, beta, gamma.
-    device : Optional[torch.device]
-        Device on which the tensor is stored. If None, use CUDA if available, otherwise CPU.
-    """
-
-    def __init__(self,
-                 lattice_params: torch.Tensor,
-                 # spgr: torch.Tensor[int],
-                 # atoms: Optional[torch.Tensor] = None,
-                 # atom_positions: Optional[torch.Tensor] = None,
-                 # occ: Optional[torch.Tensor] = None,
-                 # scale: Optional[torch.Tensor] = None, # (B, 3)
-                 device: Optional[torch.device] = None
-                 ):
-        self.device = define_device(device)
-        self.lattice_params = lattice_params.to(
-            device=self.device,
-            dtype=torch.float32
-        )
-        if self.lattice_params.ndim == 1:
-            self.lattice_params = self.lattice_params.unsqueeze(0)
-        # self.spgr = spgr.to(device)
+from .crystal import Crystal
+from .experiment import ExpParameters
+from .q_sim import Qpos
 
 
 class GIWAXS:
@@ -49,7 +20,7 @@ class GIWAXS:
     _mi : ArrayLike
         Allowed miller indices, optional. Shape (N, 3)
         If None - calculate via xrayutilities
-    q_3d : torch.Tensor
+    q_3d : Tensor
         Peak positions in 3d reciprocal space. (with default orientation [001] for all samples])
         Tensor of shape (B, num_reflections, 3).
 
@@ -66,9 +37,9 @@ class GIWAXS:
     def __init__(self,
                  crystal: Crystal,
                  exp: ExpParameters,
-                 mi: Optional[torch.Tensor] = None, ):
+                 mi: Optional[Tensor] = None, ):
         self.crystal = crystal
-        self.B = self.crystal.lattice_params.shape[0]
+        self.B = self.crystal.lat_par.shape[0]
 
         self.exp = exp
         if self.exp.q_xy_range.shape[0] == 1:
@@ -77,11 +48,9 @@ class GIWAXS:
         assert self.exp.q_xy_range.shape[
                    0] == self.B, "q_xy_range must have the same batch size as the crystal lattice parameters."
 
-        self._q_sim = Q_pos(self.crystal.lattice_params)
-        self.valid = self._q_sim.valid
         if mi is not None:
             self._mi = mi.to(
-                device=self.crystal.lattice_params.device,
+                device=self.crystal.lat_par.device,
                 dtype=torch.float32
             )
         else:
@@ -89,35 +58,40 @@ class GIWAXS:
             raise NotImplementedError(
                 "Calculation of allowed miller indices is not implemented yet. Please provide mi tensor."
             )
+        self._q_sim = Qpos(self.crystal.lat_par)
         self.q_3d = self._q_sim.calculate_q3d(self.mi)
 
     @property
-    def mi(self) -> torch.Tensor:
+    def mi(self) -> Tensor:
         """Return Miller indices."""
         return self._mi
 
+    @property
+    def rec(self):
+        return self._q_sim.rec
+
     def giwaxs_sim(self,
-                   orientation: Union[torch.Tensor, str, None] = torch.tensor([0, 0, 1]),
+                   orientation: Union[Tensor, str, None] = Tensor([0, 0, 1]),
                    move_fromMW: bool = False, ):
         """
         Calculates peak positions and TODO: their intensities in the GIWAXS pattern.
 
         Parameters
         ----------
-        orientation : Union[torch.Tensor, str, None], optional
+        orientation : Union[Tensor, str, None], optional
             Orientation of the crystal growth:
             - None: Powder diffraction (1D pattern).
             - 'random': Random orientation for each calculation (2D pattern).
-            - torch.Tensor: Specific orientation vector.
+            - Tensor: Specific orientation vector.
             Default is [001].
         move_fromMW : bool, optional
             True if move peaks from missing wedge to visible area, default = False.
 
         Returns
         -------
-        q : torch.Tensor
+        q : Tensor
             Peak positions. Tensor of shape (B, peaks_num, 2).
-        mask : torch.Tensor
+        mask : Tensor
             Mask for peaks in the visible area. Tensor of shape (B, peaks_num).
         """
         if orientation is None:
@@ -134,29 +108,29 @@ class GIWAXS:
             return q_2d, mask
 
     @staticmethod
-    def giwaxs_1d(q_1d: torch.Tensor, ):
+    def giwaxs_1d(q_1d: Tensor, ):
         """Calculate powder diffraction pattern for GIWAXS."""
         # TODO
         raise NotImplementedError("Powder diffraction is not implemented yet.")
 
     @staticmethod
-    def giwaxs_2d(q_3d: torch.Tensor,
-                  q_xy_range: torch.Tensor,
-                  q_z_range: torch.Tensor,
-                  move_fromMW=False) -> Tuple[torch.Tensor, torch.Tensor]:
+    def giwaxs_2d(q_3d: Tensor,
+                  q_xy_range: Tensor,
+                  q_z_range: Tensor,
+                  move_fromMW=False) -> Tuple[Tensor, Tensor]:
         """
         Convert q_3d to q_2d GIWAXS pattern, applying the limits for the visible area and moving peaks from missing
         wedge if needed.
 
         Parameters
         ----------
-        q_3d : torch.Tensor
+        q_3d : Tensor
             Peak positions in 3d reciprocal space.
             Tensor of shape (B, num_reflections, 3).
-        q_xy_range : torch.Tensor
+        q_xy_range : Tensor
             Range for the q in xy direction, Å^{-1}.
             Tensor of shape (B, 2).
-        q_z_range : torch.Tensor
+        q_z_range : Tensor
             Range for the q in z direction, Å^{-1}.
             Tensor of shape (B, 2).
         move_fromMW : bool, optional
@@ -164,10 +138,10 @@ class GIWAXS:
 
         Returns
         -------
-        q_2d : torch.Tensor
+        q_2d : Tensor
             Peak positions in 2d reciprocal space.
             Tensor of shape (B, num_reflections, 2).
-        q_mask : torch.Tensor
+        q_mask : Tensor
             Mask for peaks in the visible area.
             Tensor of shape (B, num_reflections).
         """
@@ -186,19 +160,19 @@ class GIWAXS:
         return q_2d, q_mask
 
     @staticmethod
-    def q3d_q2d(q_3d: torch.Tensor) -> torch.Tensor:
+    def q3d_q2d(q_3d: Tensor) -> Tensor:
         """
         Convert q_3d to q_2d
 
         Parameters
         ----------
-        q_3d : torch.Tensor
+        q_3d : Tensor
             Peak positions in 3d reciprocal space.
             Tensor of shape (B, num_reflections, 3).
 
         Returns
         -------
-        q_2d : torch.Tensor
+        q_2d : Tensor
             Peak positions in 2d reciprocal space.
             Tensor of shape (B, num_reflections, 2).
         """
@@ -210,21 +184,21 @@ class GIWAXS:
         return q_2d
 
     @staticmethod
-    def limit_q2d(q_2d: torch.Tensor,
-                  q_xy_range: torch.Tensor,
-                  q_z_range: torch.Tensor,
+    def limit_q2d(q_2d: Tensor,
+                  q_xy_range: Tensor,
+                  q_z_range: Tensor,
                   use_abs: bool = False):
         """Calculate the mask for peaks in the visible area.
 
         Parameters
         ----------
-        q_2d : torch.Tensor
+        q_2d : Tensor
             Peak positions in 2d reciprocal space.
             Tensor of shape (B, num_reflections, 2).
-        q_xy_range : torch.Tensor
+        q_xy_range : Tensor
             Range for the q in xy direction, Å^{-1}.
             Tensor of shape (B, 2).
-        q_z_range : torch.Tensor
+        q_z_range : Tensor
             Range for the q in z direction, Å^{-1}.
             Tensor of shape (B, 2).
         use_abs : bool, optional
@@ -245,9 +219,9 @@ class GIWAXS:
         return q_mask
 
     @staticmethod
-    def _move_from_MW(q_2d: torch.Tensor,  # (B, peaks_num, 2)
+    def _move_from_MW(q_2d: Tensor,  # (B, peaks_num, 2)
                       wavelength: float = 12398 / 18000,  # wavelength, Angstrom,
-                      ) -> torch.Tensor:
+                      ) -> Tensor:
         """Move peaks from Missimg Wedge to the visible area"""
         k = 2 * torch.pi / wavelength
 

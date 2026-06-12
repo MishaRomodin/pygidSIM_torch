@@ -1,7 +1,7 @@
 import torch
 
+from pygidsim_torch.crystal import Crystal
 from pygidsim_torch.experiment import ExpParameters
-from pygidsim_torch.giwaxs_sim import Crystal
 from pygidsim_torch.directions import get_mi
 import pytest
 
@@ -30,7 +30,7 @@ def exp_parameters_small():
 def crystal_single():
     """Return a Crystal instance for testing."""
     lat_par = torch.tensor([6.3026, 6.3026, 6.3026, 90., 90., 90.], dtype=torch.float32)
-    return Crystal(lat_par)
+    return Crystal(lat_par, deg=True)
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def crystal_multiple():
          [3.6541, 10.3503, 11.8438, 89.9950, 90., 90.],
          [7.6111, 7.6105, 9.7373, 90.0325, 89.9363, 119.5385]], dtype=torch.float32
     )
-    return Crystal(lat_par)
+    return Crystal(lat_par, deg=True)
 
 
 @pytest.fixture
