@@ -48,8 +48,6 @@ class GIWAXS:
         assert self.exp.q_xy_range.shape[
                    0] == self.B, "q_xy_range must have the same batch size as the crystal lattice parameters."
 
-        self._q_sim = Q_pos(self.crystal.lattice_params)
-        self.valid = self._q_sim.valid
         if mi is not None:
             self._mi = mi.to(
                 device=self.crystal.lattice_params.device,
@@ -60,12 +58,17 @@ class GIWAXS:
             raise NotImplementedError(
                 "Calculation of allowed miller indices is not implemented yet. Please provide mi tensor."
             )
-        self.q_3d = self._q_sim.calculate_q3d(self.mi)
+        self._q_sim = Qpos(self.crystal.lat_par)
+        self._q_3d = self._q_sim.calculate_q3d(self.mi)
 
     @property
     def mi(self) -> Tensor:
         """Return Miller indices."""
         return self._mi
+
+    @property
+    def rec(self):
+        return self._q_sim.rec
 
     def giwaxs_sim(self,
                    orientation: Union[Tensor, str, None] = Tensor([0, 0, 1]),
