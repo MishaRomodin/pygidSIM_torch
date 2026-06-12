@@ -93,7 +93,7 @@ def calculate_unit_volume(lat_par: Tensor,  # (B, 6)
     )
 
 
-def define_device(device: Union[str, torch.device] = None) -> torch.device:
+def define_device(device: Union[str, torch.device, None] = None) -> torch.device:
     if device is None:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     elif isinstance(device, str):
