@@ -201,6 +201,7 @@ class Q_pos:
         return R
 
     def _filter_orientations(self, orient: torch.Tensor) -> torch.Tensor:
+
     def _filter_orientations(self, orient: Tensor) -> Tensor:
         """
         Normalize orientations.
