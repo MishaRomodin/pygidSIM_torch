@@ -200,7 +200,86 @@ class Q_pos:
 
         return R
 
-    def _filter_orientations(self, orient: torch.Tensor) -> torch.Tensor:
+    def _rotation_matrix_new(
+            self,
+            orientation: Tensor = None,
+            *,
+            baz: Tensor = None,
+    ):
+        """
+        Rotate crystal
+
+        Parameters
+        ----------
+        orientation : Tensor, optional
+            Crystallographic orientations.orientation of the crystal growth.
+            Tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
+            Default is [001] for all samples.
+        baz : Tensor, optional
+            Shape (3,) or (B, 3). Basis vector for the default orientation.
+            Tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
+            Default is [001] for all samples.
+
+        Return
+        -------
+        R : Tensor
+            Rotation matrix. Shape (B, 3, 3).
+        """
+        # B = self.valid.sum().item()
+        baz_full = self._filter_orientations(baz)  # now returns (B, 3)
+        orientation_full = self._norm_orientations(orientation)  # (B, 3)
+
+        same_mask = (orientation_full == baz_full).all(dim=-1)  # (B,)
+
+        # Compute oriented vectors in the reciprocal basis for all batch entries
+        orient = torch.matmul(orientation_full.unsqueeze(1), self._rec).squeeze(1)  # (B, 3)
+
+        v1 = orient / (orient.norm(dim=-1, keepdim=True) + 1e-12)
+        v2 = baz_full / (baz_full.norm(dim=-1, keepdim=True) + 1e-12)
+
+        n_raw = torch.cross(v1, v2, dim=-1)  # (B, 3)
+        zero_mask = (n_raw.norm(dim=-1) < 1e-8)
+        # replace near-zero normals with baz to avoid NaNs (done in a differentiable way)
+        n_raw = torch.where(zero_mask.unsqueeze(-1), baz_full, n_raw)
+
+        n = n_raw / (n_raw.norm(dim=-1, keepdim=True) + 1e-12)
+
+        cos_phi = torch.sum(v1 * v2, dim=-1)  # (B,)
+        sin_phi = torch.sqrt(torch.clamp(1 - cos_phi ** 2, min=0.0))  # (B,)
+
+        nx, ny, nz = n.unbind(dim=-1)
+
+        one_minus_cos = 1 - cos_phi
+
+        a1 = torch.stack(
+            [
+                nx * nx * one_minus_cos + cos_phi,
+                nx * ny * one_minus_cos + nz * sin_phi,
+                nx * nz * one_minus_cos - ny * sin_phi
+            ], dim=-1
+        )
+
+        a2 = torch.stack(
+            [
+                nx * ny * one_minus_cos - nz * sin_phi,
+                ny * ny * one_minus_cos + cos_phi,
+                ny * nz * one_minus_cos + nx * sin_phi
+            ], dim=-1
+        )
+
+        a3 = torch.stack(
+            [
+                nx * nz * one_minus_cos + ny * sin_phi,
+                ny * nz * one_minus_cos - nx * sin_phi,
+                nz * nz * one_minus_cos + cos_phi
+            ], dim=-1
+        )
+
+        R = torch.stack([a1, a2, a3], dim=1)  # (B, 3, 3)
+
+        # Where orientation equals baz, use identity rotation
+        I = torch.eye(3, device=self.device, dtype=self.dtype).unsqueeze(0).expand(self._B, -1, -1)
+        R = torch.where(same_mask.unsqueeze(-1).unsqueeze(-1), I, R)
 
         return R
 
