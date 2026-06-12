@@ -5,6 +5,7 @@ from torch import Tensor
 import torch.nn.functional as F
 
 from .directions import get_unique_directions
+from .utils import convert_angles_to_radians
 
 
 class Qpos:
@@ -15,6 +16,8 @@ class Qpos:
     ----------
     lat_par : Tensor
         Lattice parameters. Shape (B, 6). Angles in grad.
+    deg : bool
+        If True, angles in lat_par are in degrees and will be converted to radians for calculations.
     _rec : Tensor
         Reciprocal vectors. Shape (B, 3, 3).
 
@@ -26,8 +29,11 @@ class Qpos:
         Rotate the crystal.
     """
 
-    def __init__(self, lat_par: Tensor):
+    def __init__(self, lat_par: Tensor, deg: bool = True):
         self.lat_par = lat_par
+        if deg:
+            self.lat_par = convert_angles_to_radians(self.lat_par)
+        self.deg = deg
         self._B = len(lat_par)
         self.device = lat_par.device
         self.dtype = lat_par.dtype
@@ -59,7 +65,7 @@ class Qpos:
 
     def rotate_vect(self,
                     q_3d: Tensor,
-                    orientation: Optional[Union[Tensor, str]] = None, ):
+                    orientation: Optional[Union[Tensor, str]] = None):
         """
         Rotate crystal
 
@@ -112,20 +118,20 @@ class Qpos:
 
     def _rotation_matrix(
             self,
-            orientation: Tensor = None,
+            orientation: Optional[Tensor] = None,
             *,
-            baz: Tensor = None,
+            baz: Optional[Tensor] = None,
     ):
         """
         Rotate crystal
 
         Parameters
         ----------
-        orientation : Tensor, optional
+        orientation : Optional[Tensor]
             Crystallographic orientations.orientation of the crystal growth.
             Tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
             Default is [001] for all samples.
-        baz : Tensor, optional
+        baz : Optional[Tensor]
             Shape (3,) or (B, 3). Basis vector for the default orientation.
             Tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
             Default is [001] for all samples.
@@ -191,13 +197,13 @@ class Qpos:
 
         return R
 
-    def _norm_orientations(self, orient: Tensor) -> Tensor:
+    def _norm_orientations(self, orient: Optional[Tensor]) -> Tensor:
         """
         Normalize orientations.
 
         Parameters
         ----------
-        orient : Tensor
+        orient : Optional[Tensor]
             Orientation tensor of shape (B, 3) or (3,) in case of same orientation for all samples.
             If None, default orientation [001] is used.
 
@@ -228,8 +234,7 @@ class Qpos:
         a1, a2, a3: (B, 3)
             Unit cell vectors. Invalid rows are filled with NaN.
         """
-        a, b, c = self.lat_par[:, :3].unbind(dim=-1)
-        alpha, beta, gamma = (self.lat_par[:, 3:] * pi / 180).unbind(dim=-1)  # convert to radians for trig
+        a, b, c, alpha, beta, gamma = self.lat_par.unbind(dim=-1)
 
         a1 = torch.stack(
             [
