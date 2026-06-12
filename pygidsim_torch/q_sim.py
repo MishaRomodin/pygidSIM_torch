@@ -1,8 +1,8 @@
+from typing import Union, Optional
+from math import pi
 import torch
 from torch import Tensor
 import torch.nn.functional as F
-from math import pi
-from typing import Union, Optional
 
 from .directions import get_unique_directions
 

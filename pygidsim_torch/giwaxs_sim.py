@@ -1,6 +1,6 @@
+from typing import Optional, Union, Tuple
 import torch
 from torch import Tensor
-from typing import Optional, Union, Tuple
 
 from .crystal import Crystal
 from .experiment import ExpParameters
@@ -59,7 +59,7 @@ class GIWAXS:
                 "Calculation of allowed miller indices is not implemented yet. Please provide mi tensor."
             )
         self._q_sim = Qpos(self.crystal.lat_par)
-        self._q_3d = self._q_sim.calculate_q3d(self.mi)
+        self.q_3d = self._q_sim.calculate_q3d(self.mi)
 
     @property
     def mi(self) -> Tensor:
