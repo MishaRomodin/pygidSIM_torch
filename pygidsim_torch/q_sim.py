@@ -136,8 +136,8 @@ class Q_pos:
         # B = self.valid.sum().item()
         R = torch.full((self._B, 3, 3), float('nan'), device=self.device, dtype=self.dtype)
 
-        baz = self._filter_orientations(baz)  # (B, 3)
-        orientation = self._filter_orientations(orientation)  # (B, 3)
+        baz = self._norm_orientations(baz)  # (B, 3)
+        orientation = self._norm_orientations(orientation)  # (B, 3)
 
         same_mask = (orientation == baz).all(dim=-1)  # (B,)
 
@@ -202,7 +202,7 @@ class Q_pos:
 
     def _filter_orientations(self, orient: torch.Tensor) -> torch.Tensor:
 
-    def _filter_orientations(self, orient: Tensor) -> Tensor:
+        return R
 
     def _norm_orientations(self, orient: Tensor) -> Tensor:
         """
