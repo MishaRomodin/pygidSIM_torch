@@ -12,7 +12,10 @@ class Crystal:
     Parameters
     ----------
     lat_par : Tensor
-        Lattice parameters of shape (B, 6). Columns: a, b, c, alpha, beta, gamma.
+        Lattice parameters of shape (B, 6). Columns: a, b, c, alpha, beta, gamma. Angles in degrees.
+    vol_min : float, optional
+        Minimum volume of the unit cell. Default is 10.0 Å^3.
+        Unit cells with volume below this threshold will be considered invalid.
     device : Optional[torch.device]
         Device on which the tensor is stored. If None, use CUDA if available, otherwise CPU.
     """
@@ -24,21 +27,34 @@ class Crystal:
                  # atom_positions: Optional[Tensor] = None,
                  # occ: Optional[Tensor] = None,
                  # scale: Optional[Tensor] = None, # (B, 3)
+                 vol_min: float = 10.0,
                  device: Optional[torch.device] = None
                  ):
         self.device = define_device(device)
-        self.lat_par = lat_par.to(
+        self._lat_par_all = lat_par.to(
             device=self.device,
             dtype=torch.float32
         )
         if self.lat_par.ndim == 1:
             self.lattice_params = self.lat_par.unsqueeze(0)
         # self.spgr = spgr.to(device)
-        self.volume = self._calc_volume(vol_min=10)
-        self.valid = self.volume > 0
+        self._volumes_all = self._calc_volume(vol_min=vol_min)
+        self._valid = self._volumes_all > 0
 
-    def _calc_volume(self, vol_min=10):
+    @property
+    def lat_par(self) -> Tensor:
+        return self._lat_par_all[self._valid]
+
+    @property
+    def invalid_lat_par(self) -> Tensor:
+        return self._lat_par_all[~self._valid]
+
+    @property
+    def volume(self) -> Tensor:
+        return self._volumes_all[self._valid]
+
+    def _calc_volume(self, vol_min: float):
         """Calculate the volume of the unit cell."""
-        unit_volume = calculate_volume(self.lat_par, deg=True)
+        unit_volume = calculate_volume(self._lat_par_all, deg=True)
         unit_volume[unit_volume < vol_min] = 0
         return unit_volume
