@@ -1,7 +1,8 @@
+from typing import Optional
 import torch
 from torch import Tensor
-from typing import Optional
-from pygidsim_torch.utils import define_device
+
+from .utils import define_device
 
 
 def get_unique_directions(
