@@ -65,8 +65,7 @@ To calculate a GIWAXS pattern from your own description, use the following examp
 
 ```python
 import torch
-from pygidsim_torch.experiment import ExpParameters
-from pygidsim_torch.giwaxs_sim import GIWAXS, Crystal
+from pygidsim_torch import Crystal, ExpParameters, GIWAXS
 from pygidsim_torch.directions import get_mi
 
 params = ExpParameters(
@@ -79,7 +78,7 @@ params = ExpParameters(
 lat_par = torch.tensor([6.3026, 6.3026, 6.3026, 90., 90., 90.], dtype=torch.float32)
 mi = get_mi(min_index=-6, max_index=6)  # Miller indices
 
-cr = Crystal(lat_par)
+cr = Crystal(lat_par, deg=True)
 el = GIWAXS(cr, params, mi)
 q_2d, q_mask = el.giwaxs_sim()
 ```
