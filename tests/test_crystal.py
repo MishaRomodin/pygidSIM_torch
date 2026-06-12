@@ -10,10 +10,10 @@ class TestCrystalGIWAXS:
 
     def test_crystal(self, crystal_single, crystal_multiple):
         """Test Crystal inizialization."""
-        assert crystal_single.lattice_params.shape == (1, 6), \
-            f"Lattice parameters should be (1, 6), got {crystal_single.lattice_params.shape}"
-        assert crystal_multiple.lattice_params.shape == (3, 6), \
-            f"Lattice parameters should be (3, 6), got {crystal_multiple.lattice_params.shape}."
+        assert crystal_single.lat_par.shape == (1, 6), \
+            f"Lattice parameters should be (1, 6), got {crystal_single.lat_par.shape}"
+        assert crystal_multiple.lat_par.shape == (3, 6), \
+            f"Lattice parameters should be (3, 6), got {crystal_multiple.lat_par.shape}."
 
     def test_crystal_giwaxs_single(self, crystal_single, exp_parameters, test_mi, random_orientation_single):
         """Test GIWAXS simulation with a single crystal."""
@@ -43,7 +43,7 @@ class TestCrystalGIWAXS:
 
     def test_crystal_giwaxs_multiple(self, crystal_multiple, exp_parameters, test_mi, random_orientation_multiple):
         """Test GIWAXS simulation with a several crystals."""
-        B = crystal_multiple.lattice_params.shape[0]
+        B = crystal_multiple.lat_par.shape[0]
         el = GIWAXS(crystal=crystal_multiple, exp=exp_parameters, mi=test_mi)
         assert el.exp.q_xy_range.shape[0] == B, f"q_xy_range should have {B} rows."
         assert el.exp.q_z_range.shape[0] == B, f"q_z_range should have {B} rows."
@@ -59,7 +59,7 @@ class TestCrystalGIWAXS:
 
     def test_crystal_giwaxs_multiple_random_or(self, crystal_multiple, exp_parameters, test_mi):
         """Test GIWAXS simulation with a several crystals."""
-        B = crystal_multiple.lattice_params.shape[0]
+        B = crystal_multiple.lat_par.shape[0]
         el = GIWAXS(crystal=crystal_multiple, exp=exp_parameters, mi=test_mi)
         assert el.exp.q_xy_range.shape[0] == B, f"q_xy_range should have {B} rows."
         assert el.exp.q_z_range.shape[0] == B, f"q_z_range should have {B} rows."

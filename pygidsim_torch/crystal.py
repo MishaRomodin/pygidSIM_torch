@@ -42,8 +42,8 @@ class Crystal:
             device=self.device,
             dtype=torch.float32
         )
-        if self.lat_par.ndim == 1:
-            self.lattice_params = self.lat_par.unsqueeze(0)
+        if self._lat_par_all.ndim == 1:
+            self._lat_par_all = self._lat_par_all.unsqueeze(0)
         # self.spgr = spgr.to(device)
         self._volumes_all = self._calc_volume(vol_min=vol_min)
         self._valid = self._volumes_all > 0
