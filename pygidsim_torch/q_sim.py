@@ -243,11 +243,10 @@ class Q_pos:
         a1, a2, a3: (B, 3)
             Unit cell vectors. Invalid rows are filled with NaN.
         """
-        a, b, c = self.lat_par[self.valid, :3].unbind(dim=-1)
-        alpha, beta, gamma = (self.lat_par[self.valid, 3:] * pi / 180).unbind(dim=-1)
+        a, b, c = self.lat_par[:, :3].unbind(dim=-1)
+        alpha, beta, gamma = (self.lat_par[:, 3:] * pi / 180).unbind(dim=-1)  # convert to radians for trig
 
-        a1 = torch.full((self._B, 3), float('nan'), device=self.device, dtype=self.dtype)
-        a1[self.valid] = torch.stack(
+        a1 = torch.stack(
             [
                 a,
                 torch.zeros_like(a),
@@ -255,8 +254,7 @@ class Q_pos:
             ], dim=-1
         )
 
-        a2 = torch.full((self._B, 3), float('nan'), device=self.device, dtype=self.dtype)
-        a2[self.valid] = torch.stack(
+        a2 = torch.stack(
             [
                 b * torch.cos(gamma),
                 b * torch.sin(gamma),
@@ -266,10 +264,13 @@ class Q_pos:
 
         a31 = c * torch.cos(beta)
         a32 = c * (torch.cos(alpha) - torch.cos(beta) * torch.cos(gamma)) / torch.sin(gamma)
-        a33 = torch.sqrt(c ** 2 - a31 ** 2 - a32 ** 2)
+        a33 = torch.sqrt(torch.clamp(c ** 2 - a31 ** 2 - a32 ** 2, min=0.0))
 
-        a3 = torch.full((self._B, 3), float('nan'), device=self.device, dtype=self.dtype)
-        a3[self.valid] = torch.stack([a31, a32, a33], dim=-1)
+        a3 = torch.stack([a31, a32, a33], dim=-1)
+
+        a1[~self.valid] = float('nan')
+        a2[~self.valid] = float('nan')
+        a3[~self.valid] = float('nan')
 
         return a1, a2, a3
 
