@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from pygidsim_torch.experiment import ExpParameters
+from pygidsim_torch import ExpParameters
 
 
 class TestExpPar:

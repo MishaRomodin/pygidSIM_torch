@@ -1,7 +1,6 @@
 import torch
 
-from pygidsim_torch.crystal import Crystal
-from pygidsim_torch.experiment import ExpParameters
+from pygidsim_torch import Crystal, ExpParameters
 from pygidsim_torch.directions import get_mi
 import pytest
 
