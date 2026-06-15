@@ -63,4 +63,4 @@ def random_orientation_multiple():
 @pytest.fixture
 def test_mi():
     """Return a MI set for testing."""
-    return get_mi(min_index=-3, max_index=2, dtype=torch.float32)
+    return get_mi(max_index=3, dtype=torch.float32)
