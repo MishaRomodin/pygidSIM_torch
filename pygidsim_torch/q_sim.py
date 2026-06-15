@@ -97,7 +97,7 @@ class Qpos:
         elif isinstance(orientation, str):
             if orientation != 'random':
                 raise ValueError("orientation is not correct - use Tensor with size (3,) or 'random'")
-            directions = get_unique_directions(-10, 10, device=self.device)
+            directions = get_unique_directions(10, device=self.device)
             perm_idx = torch.multinomial(
                 torch.ones(directions.shape[0]),
                 q_3d.shape[0],
