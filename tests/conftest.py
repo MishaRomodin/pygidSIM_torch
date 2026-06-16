@@ -1,7 +1,6 @@
 import torch
 
-from pygidsim_torch.crystal import Crystal
-from pygidsim_torch.experiment import ExpParameters
+from pygidsim_torch import Crystal, ExpParameters
 from pygidsim_torch.directions import get_mi
 import pytest
 
@@ -63,4 +62,4 @@ def random_orientation_multiple():
 @pytest.fixture
 def test_mi():
     """Return a MI set for testing."""
-    return get_mi(min_index=-3, max_index=2, dtype=torch.float32)
+    return get_mi(max_index=3, dtype=torch.float32)

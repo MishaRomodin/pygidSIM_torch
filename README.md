@@ -76,7 +76,7 @@ params = ExpParameters(
 
 # lattice parameters [a, b, c, α, β, γ]
 lat_par = torch.tensor([6.3026, 6.3026, 6.3026, 90., 90., 90.], dtype=torch.float32)
-mi = get_mi(min_index=-6, max_index=6)  # Miller indices
+mi = get_mi(max_index=6)  # Miller indices
 
 cr = Crystal(lat_par, deg=True)
 el = GIWAXS(cr, params, mi)

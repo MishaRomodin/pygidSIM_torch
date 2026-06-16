@@ -6,7 +6,6 @@ from .utils import define_device
 
 
 def get_unique_directions(
-        min_index: int = -10,
         max_index: int = 10,
         *,
         device: Optional[torch.device] = None,
@@ -23,8 +22,6 @@ def get_unique_directions(
 
     Parameters
     ----------
-    min_index : int
-        The minimum index.
     max_index : int
         The maximum index.
     device : Optional[torch.device], optional
@@ -41,7 +38,6 @@ def get_unique_directions(
     device = define_device(device)
 
     hkl = get_mi(
-        min_index=min_index,
         max_index=max_index,
         device=device,
         dtype=torch.int64,
@@ -52,7 +48,6 @@ def get_unique_directions(
 
 
 def get_mi(
-        min_index: int,
         max_index: int,
         *,
         device: Optional[torch.device] = None,
@@ -64,8 +59,6 @@ def get_mi(
 
     Parameters
     ----------
-    min_index : int
-        The minimum index.
     max_index : int
         The maximum index.
     device : torch.device, optional
@@ -78,7 +71,7 @@ def get_mi(
     """
     device = define_device(device)
 
-    r = torch.arange(min_index, max_index + 1, device=device)
+    r = torch.arange(-max_index, max_index + 1, device=device)
     hkl = torch.cartesian_prod(r, r, r)
 
     # remove (0,0,0)
