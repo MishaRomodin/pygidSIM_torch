@@ -1,6 +1,9 @@
 from typing import Optional, Union, Tuple
 import torch
 from torch import Tensor
+from torch_geometric.nn import radius_graph
+import cudf
+import cugraph
 
 from .crystal import Crystal
 from .experiment import ExpParameters
@@ -33,6 +36,10 @@ class GIWAXS:
     rec:
         Return reciprocal vectors.
     """
+
+    # Clustering parameters
+    CLUSTER_RADIUS_1D = 1e-2
+    CLUSTER_RADIUS_2D = 2e-2
 
     def __init__(self,
                  crystal: Crystal,
@@ -157,6 +164,7 @@ class GIWAXS:
         )
         if move_fromMW:
             q_2d = GIWAXS._move_from_MW(q_2d)
+        q_2d, q_mask = GIWAXS.cluster(q_2d, q_mask, r=GIWAXS.CLUSTER_RADIUS_2D)
         return q_2d, q_mask
 
     @staticmethod
@@ -240,3 +248,113 @@ class GIWAXS:
         q_2d[..., 1] = torch.where(condition_inMW, new_q_z, q_z)
 
         return q_2d
+
+    @staticmethod
+    def cluster(
+            q_sim: Tensor,
+            mask: Tensor,
+            r: float,
+    ) -> Tuple[Tensor, Tensor]:
+        """
+
+
+        Parameters
+        ----------
+        q_sim : Tensor
+            Peak positions in Q-space.
+             Tensor of shape (B, N) for 1D or (B, N, 2) for 2D.
+        mask : Tensor
+            Mask for peaks in the visible area.
+            Tensor of shape (B, num_reflections).
+        r : float
+            Clustering radius.
+        """
+        dim = q_sim.ndim
+        B, N = q_sim.shape[0], q_sim.shape[1]
+
+        if dim == 2:
+            # TODO
+            raise NotImplementedError("Powder diffraction is not implemented yet.")
+        elif dim == 3:
+            q_valid = q_sim[mask]  # (num_valid_peaks, 2)
+        else:
+            raise ValueError(f"Wrong q_sim dimension: {dim}")
+
+        device = q_valid.device
+        batch = torch.arange(B, device=device)[:, None]
+        batch = batch.expand(B, N)[mask]  # (num_valid_peaks, )
+
+        if q_valid.shape[0] == 0:
+            if dim == 2:
+                # TODO
+                raise NotImplementedError("Powder diffraction is not implemented yet.")
+            elif dim == 3:
+                q_pad = torch.full((B, 0, q_valid.shape[-1]), float("nan"), device=device)
+            mask_out = torch.zeros((B, 0), dtype=torch.bool, device=device)
+            return q_pad, mask_out
+
+        edge_index = radius_graph(q_valid,
+                                  r=r,
+                                  loop=True,
+                                  max_num_neighbors=256,
+                                  batch=batch,
+                                  )
+
+        src, dst = edge_index
+
+        df = cudf.DataFrame({
+            "src": cudf.Series(src),
+            "dst": cudf.Series(dst),
+        })
+
+        G = cugraph.Graph(directed=False)
+        G.from_cudf_edgelist(df, source="src", destination="dst")
+
+        cc = cugraph.connected_components(G)
+
+        vertices = torch.as_tensor(cc["vertex"].values, device=device)
+        components = torch.as_tensor(cc["labels"].values, device=device)
+
+        tmp = torch.empty_like(vertices)
+        tmp[vertices] = components
+        _, labels = torch.unique(tmp, return_inverse=True)
+
+        counts_per_cluster = torch.bincount(labels).float()
+        if dim == 2:
+            # TODO
+            raise NotImplementedError("Powder diffraction is not implemented yet.")
+        elif dim == 3:
+            sum_x = torch.bincount(labels, weights=q_valid[:, 0])  # (num_clusters)
+            sum_y = torch.bincount(labels, weights=q_valid[:, 1])  # (num_clusters)
+            q_fin = torch.stack((sum_x / counts_per_cluster,
+                                 sum_y / counts_per_cluster,),
+                                dim=1, )  # (num_clusters, 2)
+
+        num_clusters = counts_per_cluster.shape[0]
+        cluster_batch = torch.empty(num_clusters,
+                                    dtype=batch.dtype,
+                                    device=device)
+        cluster_batch[labels] = batch  # (num_clusters)
+
+        perm = torch.argsort(cluster_batch)
+        q_fin = q_fin[perm]
+        cluster_batch = cluster_batch[perm]
+
+        counts = torch.bincount(cluster_batch, minlength=B)
+        starts = torch.cumsum(counts, 0) - counts
+        N_max = counts.max().item()
+
+        idx = torch.arange(num_clusters, device=device)
+        local_idx = idx - starts[cluster_batch]
+
+        if dim == 2:
+            # TODO
+            q_pad = torch.full((B, N_max), float("nan"), device=device)
+            raise NotImplementedError("Powder diffraction is not implemented yet.")
+        elif dim == 3:
+            q_pad = torch.full((B, N_max, 2), float("nan"), device=device)
+
+        q_pad[cluster_batch, local_idx] = q_fin
+        mask_out = ~torch.isnan(q_pad).any(dim=-1)
+
+        return q_pad, mask_out
