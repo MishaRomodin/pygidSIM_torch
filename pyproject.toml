@@ -19,8 +19,8 @@ keywords = [
 dependencies = [
     "torch>=2.0.0",
     "torch-geometric>=2.6.1",
-    "cudf-cu12==26.2.1",
-    "cugraph-cu12==26.2.1",
+    "cudf-cu12==26.2.0",
+    "cugraph-cu12==26.2.0",
 ]
 
 [project.optional-dependencies]
