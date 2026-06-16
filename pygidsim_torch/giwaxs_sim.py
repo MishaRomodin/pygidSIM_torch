@@ -1,9 +1,6 @@
 from typing import Optional, Union, Tuple
 import torch
 from torch import Tensor
-from torch_geometric.nn import radius_graph
-import cudf
-import cugraph
 
 from .crystal import Crystal
 from .experiment import ExpParameters
@@ -269,6 +266,10 @@ class GIWAXS:
         r : float
             Clustering radius.
         """
+        from torch_geometric.nn import radius_graph
+        import cudf
+        import cugraph
+        
         dim = q_sim.ndim
         B, N = q_sim.shape[0], q_sim.shape[1]
 
