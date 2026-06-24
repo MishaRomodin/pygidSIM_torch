@@ -62,7 +62,7 @@ class GIWAXS:
             raise NotImplementedError(
                 "Calculation of allowed miller indices is not implemented yet. Please provide mi tensor."
             )
-        self._q_sim = Qpos(self.crystal.lat_par)
+        self._q_sim = Qpos(self.crystal.lat_par, deg=self.crystal.deg)
         self.q_3d = self._q_sim.calculate_q3d(self.mi)
 
     @property
