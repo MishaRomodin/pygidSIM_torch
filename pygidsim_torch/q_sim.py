@@ -15,7 +15,7 @@ class Qpos:
     Attributes
     ----------
     lat_par : Tensor
-        Lattice parameters. Shape (B, 6). Angles in grad.
+        Lattice parameters. Shape (B, 6).
     deg : bool
         If True, angles in lat_par are in degrees and will be converted to radians for calculations.
     _rec : Tensor

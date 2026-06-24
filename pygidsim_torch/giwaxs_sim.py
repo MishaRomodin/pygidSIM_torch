@@ -269,7 +269,7 @@ class GIWAXS:
         from torch_geometric.nn import radius_graph
         import cudf
         import cugraph
-        
+
         dim = q_sim.ndim
         B, N = q_sim.shape[0], q_sim.shape[1]
 
